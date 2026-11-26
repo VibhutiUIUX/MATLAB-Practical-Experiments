@@ -1,0 +1,80 @@
+Exp 2: Estimation of PSD using AR model and compare it with non parametric Yule walker method 
+
+clc;
+
+fs=1000; % sampling frequency
+N=1024; % no. of samples
+t=(0:N-1)/fs;
+
+f1=100; % frequency of 1st sinusoid
+f2=250; % frequency of 2nd sinusoid
+
+x=sin(2*pi*f1*t) + 0.5*sin(2*pi*f2*t)+ 0.5*(randn(size(t)));
+
+figure;
+plot(t,x);
+grid on
+xlabel("Time(s)")
+ylabel("Amplitude")
+title("Time Domain Signal")
+
+%% Periodogram
+
+[PSD_Periodogram,f_periodogram]=periodogram(x,[],N,fs);
+
+
+%% Welch
+
+overlap = 128; % 50% overlap
+segment_length = 256;
+[PSD_welch,f_welch]=pwelch(x,hamming(segment_length),overlap,N,fs);
+
+
+%% AR Model
+
+AR_order = 20;
+
+% Estimate AR coefficients using Yule-Walker
+[a,noise_variance] = aryule(x,AR_order);
+
+% Calculate PSD using AR Model
+[Pxx_AR,f_AR] = freqz(sqrt(noise_variance),a,N,fs);
+
+% Convert PSD magnitude to PSD
+Pxx_AR = abs(Pxx_AR).^2;
+
+
+%% Plot
+
+figure;
+plot(f_periodogram,10*log10(PSD_Periodogram),'LineWidth',1.2)
+hold on;
+plot(f_welch,10*log10(PSD_welch),'LineWidth',1.2)
+hold on;
+plot(f_AR,10*log10(Pxx_AR),'LineWidth',1.2)
+grid on;
+xlabel('Frequency')
+ylabel('Amplitude')
+title('Comparison of PSD Estimates')
+legend('Periodogram','Welch','AR-Model Yule-Walker')
+
+xlim([0,fs/2])
+
+%% Display max max PSD freq
+
+[~,idx1] = max(PSD_Periodogram);
+[~,idx2] = max(PSD_welch);
+[~,idx3] = max(Pxx_AR);
+
+fprintf('\n Peak Frequency Results: \n')
+
+fprintf('\n Peak frequency using periodogram = %.2fHz\n',f_periodogram(idx1))
+fprintf('\n Peak frequency using welch = %.2fHz\n',f_welch(idx2))
+fprintf('\n Peak frequency using barlett = %.2fHz\n',f_AR(idx3))
+
+% Display AR Information
+
+fprintf('\n AR Model Order: %d \n',AR_order);
+fprintf('\n Estimated Noise Variance: %0.4f \n',noise_variance);
+fprintf('\n AR Model coefficients: \n');
+disp(a);

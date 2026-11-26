@@ -1,0 +1,121 @@
+Exp 3: Design and Implement FIR Wiener filter for noise reduction in corrupted signal
+
+
+%% FIR Wiener Filter
+
+clc;
+clear;
+close all;
+
+%% Generate Discrete Time Signal
+
+Fs = 1000;         % Sampling frequency
+N = 1000;          % Number of samples
+t = (0:N-1)/Fs;
+
+f1 = 50;           % Frequency of first sinusoid
+f2 = 120;          % Frequency of second sinusoid
+
+% Original / Clean Signal
+d = sin(2*pi*f1*t) + 0.5*sin(2*pi*f2*t);
+
+%% Add Gaussian Noise
+
+rng(1);
+
+noise = 0.5*randn(1,N);
+
+% Corrupted Signal
+x = d + noise;
+
+%% FIR Wiener Filter
+
+M = 20;            % Filter order
+L = M + 1;         % Number of filter coefficients
+
+%% Autocorrelation
+
+rxx_full = xcorr(x,M,'biased');
+
+% Select autocorrelation values for lags 0 to M
+rxx = rxx_full(M+1:end);
+
+% Convert to column vector
+rxx = rxx(:);
+
+%% Calculate Cross-correlation
+
+rxd_full = xcorr(x,d,M,'biased');
+
+% Select cross-correlation values for lags 0 to M
+rxd = rxd_full(M+1:end);
+
+% Convert to column vector
+rxd = rxd(:);
+
+%% Construct Autocorrelation Matrix
+
+R = toeplitz(rxx);
+
+%% Solve Wiener-Hopfield Equation
+
+% R*h = rxd
+h = R\rxd;
+
+disp('FIR Wiener filter coefficients:');
+disp(h);
+
+% Filter the corrupted signal
+y = filter(h,1,x);
+
+% Calculate Mean Square Error (MSE)
+MSE_before = mean((d-x).^2);
+MSE_after = mean((d-y).^2);
+
+% Display MSE
+fprintf('\nMSE before filtering = %.4f\n', MSE_before);
+fprintf('MSE after filtering = %.4f\n', MSE_after);
+
+%% Figure 1: Three Signals in One Graph
+
+figure(1);
+
+% Original Signal
+subplot(3,1,1);
+plot(t,d);
+xlabel('Time (s)');
+ylabel('Amplitude');
+title('Original Signal (Clean Signal)');
+grid on;
+
+% Corrupted Signal
+subplot(3,1,2);
+plot(t,x);
+xlabel('Time (s)');
+ylabel('Amplitude');
+title('Corrupted Signal with Gaussian Noise');
+grid on;
+
+% Filtered Signal
+subplot(3,1,3);
+plot(t,y);
+xlabel('Time (s)');
+ylabel('Amplitude');
+title('FIR Wiener Filter Output');
+grid on;
+
+%% Figure 2: Comparison of Clean and Filtered Signal
+
+figure(2);
+
+plot(t,d);
+hold on;
+plot(t,y);
+
+xlabel('Time (s)');
+ylabel('Amplitude');
+title('Clean Signal vs Wiener Filter Output');
+legend('Clean Signal','Filtered Signal');
+grid on;
+
+hold off;

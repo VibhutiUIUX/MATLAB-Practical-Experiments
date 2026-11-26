@@ -1,0 +1,57 @@
+Exp 9: Signal Compression and denoising using wavelet transform techniques
+
+
+clc;
+clear all;
+close all;
+
+N = 1024;
+n = 0:N-1;
+
+% Generate original signal
+x = sin(2*pi*5*n/N)+0.5*sin(2*pi*20*n/N);
+
+% Add Gaussian noise
+xn = x + 0.4*randn(size(x));
+
+% Wavelet decomposition
+[C,L] = wavedec(xn,4,'db4');
+
+% Estimate noise and calculate threshold
+D1 = detcoef(C,L,1);
+sigma = median(abs(D1))/0.6745;
+T = sigma * sqrt(2*log(N));
+
+% Apply soft thresholding
+Cnew = C;
+Cnew(L(1)+1:end) = wthresh(C(L(1)+1:end),'s',T);
+
+% Reconstruct denoised signal
+xr = waverec(Cnew,L,'db4');
+
+% Calculate performance parameters
+MSE = mean((x-xr).^2);
+SNR = 10*log10(sum(x.^2)/sum((x-xr).^2));
+
+% Display results
+fprintf('MSE = %f\n',MSE);
+fprintf('SNR = %f dB\n',SNR);
+
+% Plot Results
+figure;
+subplot(3,1,1);
+plot(n,x);
+title('Original Signal');
+grid on;
+
+subplot(3,1,2);
+plot(n,xn);
+title('Noisy Signal');
+grid on;
+
+subplot(3,1,3);
+plot(n,xr);
+title('Denoised and Reconstructed Signal');
+grid on;
+
+

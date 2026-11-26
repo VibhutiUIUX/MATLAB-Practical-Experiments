@@ -1,0 +1,69 @@
+Exp 7: To implement interpolation and decimation techniques for changing the sampling rate  of DTS and observe effects of sampling rate. 
+
+
+clc;
+clear;
+close all;
+
+% Original signal
+Fs = 1000;          % Original sampling frequency
+t = 0:1/Fs:0.1;     % Time vector
+x = sin(2*pi*100*t); % 100 Hz sinusoidal signal
+
+% ---------------- INTERPOLATION ----------------
+L = 3;              % Interpolation factor
+x_interp = interp(x,L);
+Fs_interp = L * Fs;
+
+t_interp = (0:length(x_interp)-1)/Fs_interp;
+
+% ---------------- DECIMATION ----------------
+M = 2;              % Decimation factor
+x_dec = decimate(x,M);
+Fs_dec = Fs/M;
+
+t_dec = (0:length(x_dec)-1)/Fs_dec;
+
+% ---------------- RATIONAL SAMPLING RATE ----------------
+% L/M = 3/2
+x_new = resample(x,L,M);
+Fs_new = Fs*L/M;
+
+t_new = (0:length(x_new)-1)/Fs_new;
+
+% ---------------- DISPLAY RESULTS ----------------
+fprintf('Original Sampling Frequency = %.2f Hz\n', Fs);
+fprintf('After Interpolation (L=%d) = %.2f Hz\n', L, Fs_interp);
+fprintf('After Decimation (M=%d) = %.2f Hz\n', M, Fs_dec);
+fprintf('After Resampling (L/M=%d/%d) = %.2f Hz\n', L, M, Fs_new);
+
+% ---------------- PLOT RESULTS ----------------
+figure;
+
+subplot(4,1,1);
+plot(t,x,'LineWidth',1.2);
+grid on;
+title('Original Signal');
+xlabel('Time (s)');
+ylabel('Amplitude');
+
+subplot(4,1,2);
+plot(t_interp,x_interp,'LineWidth',1.2);
+grid on;
+title('After Interpolation');
+xlabel('Time (s)');
+ylabel('Amplitude');
+
+subplot(4,1,3);
+plot(t_dec,x_dec,'LineWidth',1.2);
+grid on;
+title('After Decimation');
+xlabel('Time (s)');
+ylabel('Amplitude');
+
+subplot(4,1,4);
+plot(t_new,x_new,'LineWidth',1.2);
+grid on;
+title('After Rational Resampling (L/M = 3/2)');
+xlabel('Time (s)');
+ylabel('Amplitude');

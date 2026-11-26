@@ -1,0 +1,65 @@
+Exp 1: Estimation of PSD using periodogram barlett and welch 
+
+clc;
+
+fs=1000; %sampling frequency
+N=1024; %no. of sasmples
+t=(0:N-1)/fs;
+
+f1=100; %frequency of first sinusoidal wave
+f2=250; %frequency of second sinusoidal wave
+
+x=sin(2*pi*f1*t) + 0.5*sin(2*pi*f2*t)+ 0.5*(randn(size(t)));
+
+figure;
+plot(t,x);
+grid on
+xlabel("Time(s)")
+ylabel("Amplitude")
+title("Time Domain Signal")
+
+x=sin(2*pi*f1*t)+0.5*sin(2*pi*f2*t)+randn(size(t));
+
+figure;
+plot(t,x);
+grid on
+xlabel("Time(s)")
+ylabel("Amplitude")
+title("Time Domain Signal")
+
+
+%% Periodogram
+[PSD_periodogram, f_periodogram] = periodogram(x,[],N,fs);
+
+%% Barlett
+segment_length=256;
+[PSD_barlett,f_barlett]=pwelch(x,rectwin(segment_length),0,N,fs);
+
+%% Welch
+overlap=128;
+[PSD_Welch,f_welch]=pwelch(x,hamming(segment_length),overlap,N,fs);
+
+%Plot & Compare all three PSD
+figure;
+plot(f_periodogram,10*log10(PSD_periodogram),'LineWidth',1.2)
+hold on;
+plot(f_barlett, 10*log10(PSD_barlett),'LineWidth',1.2)
+hold on;
+plot(f_welch, 10*log10(PSD_Welch),'LineWidth',1.2)
+
+grid on
+xlabel('Frequency')
+ylabel('Amplitude')
+title('Comparison of PSD')
+legend('Periodogram','Barlett','Welch')
+xlim([0,fs/2]);
+
+%% Display max PSD freq
+
+[~,idx1]=max(PSD_periodogram);
+[~,idx2]=max(PSD_barlett);
+[~,idx3]=max(PSD_Welch);
+
+fprintf('Peak frequency using periodogram = %2fHz\n',f_periodogram(idx1))
+fprintf('Peak frequency using barlett = %2fHz\n',f_barlett(idx2))
+fprintf('Peak frequency using welch = %2fHz\n',f_welch(idx3));
